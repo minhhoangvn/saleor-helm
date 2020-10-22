@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: '{{.Release.Name}}-saleor-api'
+  labels:
+    app: '{{.Release.Name}}-saleor'
+    service: '{{.Release.Name}}-saleor-api'
+spec:
+  replicas: 3
+  serviceName: '{{.Release.Name}}-saleor-api'
+  selector:
+    matchLabels:
+      app: '{{.Release.Name}}-saleor'
+      service: '{{.Release.Name}}-saleor-api'
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: '{{.Release.Name}}-saleor'
+        service: '{{.Release.Name}}-saleor-api'
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: hnminh/saleor-api:kms
+          name: saleor-api
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: api
+          env:
+            - name: ENABLE_DEBUG_TOOLBAR
+              value: '{{ .Values.saleor.debugToolBar }}'
+            - name: DEBUG
+              value: '{{ .Values.saleor.debug }}'
+            {{ if .Values.postgresql.enabled }}
+            - name: DATABASE_URL
+              value: postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{.Release.Name}}-postgresql-headless.default:5432/postgres'
+            {{ else }}
+            - name: DATABASE_URL
+              value: '{{ .Values.saleor.databaseUrl }}'
+            {{ end }}
+            {{ if .Values.redis.enabled }}
+            - name: CACHE_URL
+              value: 'redis://{{.Release.Name}}-redis-headless.default:6379/0'
+            {{ else }}
+            - name: CACHE_URL
+              value: '{{ .Values.saleor.redisUrl }}'
+            {{ end }}
+            - name: ALLOWED_CLIENT_HOSTS
+              value: '{{ .Values.saleor.allowHosts }}, {{.Release.Name}}-saleor-dashboard, {{.Release.Name}}-saleor-storefront'
+            - name: ALLOWED_HOSTS
+              value: '{{ .Values.saleor.allowHosts }}, {{.Release.Name}}-saleor-dashboard, {{.Release.Name}}-saleor-storefront'
+            - name: SECRET_KEY
+              value: '{{ .Values.saleor.secretKey }}'
+            - name: DJANGO_SUPERUSER_PASSWORD
+              value: '{{ .Values.saleor.superUserPassword }}'
+            - name: DASHBOARD_URL
+              value: 'http://{{ .Values.saleor.dashboardIngress }}'
+            - name: STOREFRONT_URL
+              value: 'http://{{ .Values.saleor.storefrontIngress }}'
+          resources:
+            limits:
+              cpu: '250m'
+              memory: '2Gi'
+            requests:
+              cpu: '250m'
+              memory: '2Gi'
+          volumeMounts:
+            - mountPath: /app/media
+              name: media-storage
+            - mountPath: /app/static
+              name: static-storage
+      volumes:
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: 'storage-{{.Release.Name}}-saleor-media'
+        - name: static-storage
+          persistentVolumeClaim:
+            claimName: 'storage-{{.Release.Name}}-saleor-static'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{.Release.Name}}-saleor-dashboard'
+  labels:
+    app: '{{.Release.Name}}-saleor'
+    service: '{{.Release.Name}}-saleor-dashboard'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: '{{.Release.Name}}-saleor'
+      service: '{{.Release.Name}}-saleor-dashboard'
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: '{{.Release.Name}}-saleor'
+        service: '{{.Release.Name}}-saleor-dashboard'
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: hnminh/saleor-dashboard:kms
+          name: saleor-dashboard
+          imagePullPolicy: Always
+          # Image with debug mode need to config webpack-dev-server port
+          # command: ['/bin/sh']
+          # args: ['-c', 'npm start -- --port 80 --host 0.0.0.0 --disable-host-check']
+          ports:
+            - containerPort: 80
+              name: dashboard
+          env:
+            - name: DANGEROUSLY_DISABLE_HOST_CHECK
+              value: 'true'
+            - name: API_URI
+              value: 'http://{{ .Values.saleor.apiIngress }}/graphql/'
+          resources:
+            limits:
+              cpu: '150m'
+              memory: '150Mi'
+            requests:
+              cpu: '150m'
+              memory: '150Mi'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{.Release.Name}}-saleor-storefront'
+  labels:
+    app: '{{.Release.Name}}-saleor'
+    service: '{{.Release.Name}}-saleor-storefront'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: '{{.Release.Name}}-saleor'
+      service: '{{.Release.Name}}-saleor-storefront'
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: '{{.Release.Name}}-saleor'
+        service: '{{.Release.Name}}-saleor-storefront'
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: hnminh/saleor-storefront:kms
+          name: saleor-storefront
+          imagePullPolicy: Always
+          # Image with debug mode need to config webpack-dev-server port
+          # command: ['/bin/sh']
+          # args: ['-c', 'npm start -- --port 80 --host 0.0.0.0 --disable-host-check']
+          ports:
+            - containerPort: 80
+              name: storefront
+          env:
+            - name: DANGEROUSLY_DISABLE_HOST_CHECK
+              value: 'true'
+            - name: API_URI
+              value: 'http://{{ .Values.saleor.apiIngress }}/graphql/'
+          resources:
+            limits:
+              cpu: '150m'
+              memory: '150Mi'
+            requests:
+              cpu: '150m'
+              memory: '150Mi'

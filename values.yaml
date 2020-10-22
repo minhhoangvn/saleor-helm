@@ -1,0 +1,212 @@
+###############################################################
+#################### Saleor  ##################################
+###############################################################
+saleor:
+  databaseUrl: 'postgres://postgres:Coe@2020@coe-postgresql-headless.default:5432/saleor'
+  redisUrl: 'redis://coe-redis-headless.default:6379/0'
+  superUserPassword: 'Coe@2020'
+  secretKey: 'Coe@2020'
+  allowHosts: 'localhost, 127.0.0.1, 0.0.0.0, 192.168.10.69, saleor.testing.coe.com'
+  apiIngress: 'saleor.testing.coe.com'
+  dashboardIngress: 'saleor-dashboard.testing.coe.com'
+  storefrontIngress: 'saleor-storefront.testing.coe.com'
+  debugToolBar: 'True'
+  debug: 'True'
+###############################################################
+#################### pgadmin4 #################################
+###############################################################
+pgadmin4:
+  enabled: true
+  env:
+    email: coe@email.com
+    password: 'Coe@2020'
+  persistentVolume:
+    enabled: true
+    storageClass: 'default'
+    size: 5Gi
+    accessMode: ReadWriteOnce
+  resources:
+    limits:
+      cpu: 150m
+      memory: 1Gi
+    requests:
+      cpu: 150m
+      memory: 1Gi
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    hosts:
+      - host: 'pgadmin.testing.coe.com'
+        paths:
+          - /
+  livenessProbe:
+    httpGet:
+      path: /misc/ping
+      port: 80
+    initialDelaySeconds: 120
+    periodSeconds: 60
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /misc/ping
+      port: 80
+    initialDelaySeconds: 120
+    periodSeconds: 60
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+###############################################################
+#################### Nginx Ingress ############################
+###############################################################
+nginx-ingress-controller:
+  enabled: true
+  commonAnnotations:
+    scrape-metric: 'true'
+  service:
+    externalIPs:
+      - 192.168.1.1
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        scrape-metric: 'true'
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        scrape-metric: 'true'
+  serviceAccount:
+    create: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 150m
+      memory: 256Mi
+  defaultBackend:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+###############################################################
+#################### NFS Client ###############################
+###############################################################
+nfs-client-provisioner:
+  enabled: true
+  nfs:
+    server: 192.168.1.1
+    path: /mnt/sharedfolder
+  storageClass:
+    create: true
+    provisionerName: nfs-provision
+    defaultClass: true
+    name: default
+    allowVolumeExpansion: true
+    reclaimPolicy: Delete
+    archiveOnDelete: true
+    accessModes: ReadWriteOnce
+  rbac:
+    create: false
+  serviceAccount:
+    create: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+###############################################################
+#################### Postgresql ###############################
+###############################################################
+postgresql:
+  enabled: true
+  image:
+    debug: true
+  global:
+    postgresql:
+      postgresqlPassword: 'Coe@2020'
+    storageClass: 'default'
+  postgresqlPostgresPassword: 'Coe@2020'
+  postgresqlUsername: 'postgres'
+  postgresqlPassword: 'Coe@2020'
+  persistence:
+    enabled: true
+    storageClass: 'default'
+    size: 25Gi
+  resources:
+    limits:
+      cpu: 500m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  metrics:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        scrape-metric: 'true'
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
+##############################################################
+################### Redis ####################################
+##############################################################
+redis:
+  enabled: true
+  global:
+    storageClass: 'default'
+  usePassword: false
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      selector:
+        scrape-metric: 'true'
+    service:
+      annotations:
+        scrape-metric: 'true'
+    resources:
+      limits:
+        cpu: 150m
+        memory: 256Mi
+      requests:
+        cpu: 150m
+        memory: 256Mi
+  master:
+    #disableCommands: ["FLUSHDB", "FLUSHALL"]
+    disableCommands: []
+    persistence:
+      storageClass: 'default'
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: false
+    resources:
+      limits:
+        cpu: 150m
+        memory: 256Mi
+      requests:
+        cpu: 150m
+        memory: 256Mi
+  slave:
+    persistence:
+      storageClass: 'default'
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 300m
+        memory: 512Mi
