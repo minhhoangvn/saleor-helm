@@ -28,13 +28,13 @@ cd saleor-helm
 **If you deploy this chart in your local machine you MUST:**
 
 1. Set up an NFS server and configure the server and path values in 'nfs-client-provisioner' section in values.yaml file
-
+   ![NFS Config Data](/images/5.png)
 2. Configure an "externalIPs" value in "nginx-ingress-controller" section in file values.yaml to your current local machine private IP Address [[Get your current IP]](https://www.cyberciti.biz/faq/how-to-find-my-public-ip-address-from-command-line-on-a-linux/)
+   ![Ingress IP Config Data](/images/6.png)
+   **If you want to you external Postgresql and Redis you MUST:**
 
-**If you want to you external Postgresql and Redis you MUST:**
-
-1. Configure "enabled" in both "postgresql" and "redis" section to false
-2. Configure "databaseUrl" and "redisUrl" values in "saleor" section
+3. Configure "enabled" in both "postgresql" and "redis" section to false
+4. Configure "databaseUrl" and "redisUrl" values in "saleor" section
 
 ### 3. Install Saleor chart
 
@@ -51,4 +51,4 @@ helm install saleor ./
 ![Home](/images/1.png)
 ![GraphQL-Playground](/images/2.png)
 ![Storefront](/images/3.png)
-![Dashboard](/images/2.png)
+![Dashboard](/images/4.png)
