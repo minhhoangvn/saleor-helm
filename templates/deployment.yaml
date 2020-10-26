@@ -29,6 +29,8 @@ spec:
             - containerPort: 8000
               name: api
           env:
+            - name: ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL
+              value: '{{ .Values.saleor.confirmationByEmail }}'
             - name: ALLOWED_GRAPHQL_ORIGINS
               value: '*'
             - name: ENABLE_DEBUG_TOOLBAR
