@@ -29,6 +29,8 @@ spec:
             - containerPort: 8000
               name: api
           env:
+            - name: ALLOWED_GRAPHQL_ORIGINS
+              value: '*'
             - name: ENABLE_DEBUG_TOOLBAR
               value: '{{ .Values.saleor.debugToolBar }}'
             - name: DEBUG
@@ -61,10 +63,10 @@ spec:
               value: 'http://{{ .Values.saleor.storefrontIngress }}'
           resources:
             limits:
-              cpu: '250m'
+              cpu: '300m'
               memory: '2Gi'
             requests:
-              cpu: '250m'
+              cpu: '300m'
               memory: '2Gi'
           volumeMounts:
             - mountPath: /app/media
