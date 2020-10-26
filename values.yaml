@@ -12,6 +12,7 @@ saleor:
   storefrontIngress: 'saleor-storefront.testing.coe.com'
   debugToolBar: 'True'
   debug: 'True'
+  confirmationByEmail: 'False'
 ###############################################################
 #################### pgadmin4 #################################
 ###############################################################
