@@ -6,7 +6,7 @@ saleor:
   redisUrl: 'redis://coe-redis-headless.default:6379/0'
   superUserPassword: 'Coe@2020'
   secretKey: 'Coe@2020'
-  allowHosts: 'localhost, 127.0.0.1, 0.0.0.0, 192.168.10.69, saleor.testing.coe.com'
+  allowHosts: 'localhost, 127.0.0.1, 0.0.0.0, 192.168.10.69, saleor.testing.coe.com, saleor-storefront.testing.coe.com, saleor-dashboard.testing.coe.com'
   apiIngress: 'saleor.testing.coe.com'
   dashboardIngress: 'saleor-dashboard.testing.coe.com'
   storefrontIngress: 'saleor-storefront.testing.coe.com'
