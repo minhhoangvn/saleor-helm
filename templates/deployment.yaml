@@ -25,8 +25,6 @@ spec:
         - image: hnminh/saleor-api:kms
           name: saleor-api
           imagePullPolicy: Always
-          command: ['uwsgi']
-          args: ["--ini", "/app/saleor/wsgi/uwsgi.ini","--enable-threads", "--reload-on-rss", "450", "--vacuum", "--harakiri", "45"]
           ports:
             - containerPort: 8000
               name: api
