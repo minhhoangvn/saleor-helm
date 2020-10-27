@@ -20,7 +20,7 @@ spec:
             [
               '/bin/sh',
               '-c',
-              'python3 manage.py migrate && python3 manage.py populatedb && python3 manage.py populatedb && python3 manage.py populatedb &&  python3 manage.py populatedb && python manage.py create_thumbnails && python3 manage.py createsuperuser --no-input --email=admin@kms-technology.com || true && python3 manage.py createsuperuser --no-input --email=minhhoang@kms-technology.com || true && echo "UPDATE public.warehouse_stock SET quantity = 2147483647" | python3 manage.py dbshell && echo yes | python3 manage.py collectstatic && cp -avr /app/media/* /app/media-temp && cp -avr /app/static/* /app/static-temp',
+              'apt-get update -y && apt-get install postgresql-client -y && python3 manage.py migrate && python3 manage.py populatedb && python3 manage.py populatedb && python3 manage.py populatedb &&  python3 manage.py populatedb && python manage.py create_thumbnails && python3 manage.py createsuperuser --no-input --email=admin@kms-technology.com || true && python3 manage.py createsuperuser --no-input --email=minhhoang@kms-technology.com || true && echo "UPDATE public.warehouse_stock SET quantity = 2147483647" | python3 manage.py dbshell && echo yes | python3 manage.py collectstatic && cp -avr /app/media/* /app/media-temp && cp -avr /app/static/* /app/static-temp',
             ]
           env:
             - name: ENABLE_DEBUG_TOOLBAR
