@@ -27,7 +27,7 @@ cd saleor-helm
 
 **If you deploy this chart in your local machine you MUST:**
 
-1. Set up an NFS server and configure the server and path values in 'nfs-client-provisioner' section in values.yaml file
+1. Set up an NFS server and configure the server and path values in nfs-client-values.yaml file
    ![NFS Config Data](/images/5.png)
 2. Configure an "externalIPs" value in "nginx-ingress-controller" section in file values.yaml to your current local machine private IP Address [[Get your current IP]](https://www.cyberciti.biz/faq/how-to-find-my-public-ip-address-from-command-line-on-a-linux/)
    ![Ingress IP Config Data](/images/6.png)
@@ -36,13 +36,37 @@ cd saleor-helm
 3. Configure "enabled" in both "postgresql" and "redis" section to false
 4. Configure "databaseUrl" and "redisUrl" values in "saleor" section
 
-### 3. Install Saleor chart
+### 3. Install NFS Client chart
 
 ```
-helm install saleor ./
+helm repo add stable https://kubernetes-charts.storage.googleapis.com
+helm repo update
+helm install nfs-client -f nfs-client-values.yaml stable/nfs-client-provisioner --version 1.2.9 --wait --timeout 60000s
 ```
 
-### 4. Edit your hosts file to add the list of private domains below [[Installation Guide]](https://www.tecmint.com/setup-local-dns-using-etc-hosts-file-in-linux/)
+![nfs-client-provisioner](/images/7.png)
+
+### 4. Install Postgresql Client chart
+
+```
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm install postgresql -f postgresql-values.yaml bitnami/postgresql --version 9.8.2 --wait --timeout 60000s
+```
+
+![postgresql](/images/8.png)
+
+**Note**
+Copy the value
+
+### 5. Install Saleor chart
+
+```
+cd saleor
+helm install saleor ./ --wait --timeout 60000s
+```
+
+### 6. Edit your hosts file to add the list of private domains below [[Installation Guide]](https://www.tecmint.com/setup-local-dns-using-etc-hosts-file-in-linux/)
 
 1. saleor.testing.coe.com
 2. saleor-dashboard.testing.coe.com

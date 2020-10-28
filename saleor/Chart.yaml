@@ -36,24 +36,24 @@ dependencies:
     tags:
       - nginx-ingress-controller
       - startup-infrastructure
-  - name: nfs-client-provisioner
-    version: 1.2.9
-    repository: https://kubernetes-charts.storage.googleapis.com
-    condition: nfs-client-provisioner.enabled, global.nfs-client-provisioner.enabled
-    tags:
-      - nfs-client-provisioner
-      - startup-infrastructure
-  - name: postgresql
-    version: 9.8.2
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled, global.postgresql.enabled
-    tags:
-      - postgresql
-      - startup-infrastructure
   - name: redis
     version: 11.1.1
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled, global.redis.enabled
     tags:
       - redis
+      - startup-infrastructure
+  - name: kube-prometheus-stack
+    version: 9.4.8
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled, global.prometheus.enabled
+    tags:
+      - prometheus
+      - startup-infrastructure
+  - name: loki-stack
+    version: 2.0.0
+    repository: https://grafana.github.io/loki/charts
+    condition: loki-stack.enabled, global.loki-stack.enabled
+    tags:
+      - loki-stack
       - startup-infrastructure

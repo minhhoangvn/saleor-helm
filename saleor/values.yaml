@@ -1,0 +1,495 @@
+###############################################################
+#################### Saleor  ##################################
+###############################################################
+saleor:
+  databaseUrl: 'postgres://postgres:P@ssword!@postgresql.default.svc.cluster.local:5432/saleor'
+  redisUrl: 'redis://coe-redis-headless.default:6379/0'
+  superUserPassword: 'P@ssword!'
+  secretKey: 'P@ssword!'
+  allowHosts: 'localhost, 127.0.0.1, 0.0.0.0, 192.168.10.69, saleor.testing.coe.com, saleor-storefront.testing.coe.com, saleor-dashboard.testing.coe.com'
+  apiIngress: 'saleor.testing.coe.com'
+  dashboardIngress: 'saleor-dashboard.testing.coe.com'
+  storefrontIngress: 'saleor-storefront.testing.coe.com'
+  debugToolBar: 'True'
+  debug: 'True'
+  confirmationByEmail: 'False'
+###############################################################
+#################### pgadmin4 #################################
+###############################################################
+pgadmin4:
+  enabled: true
+  env:
+    email: coe@email.com
+    password: 'P@ssword!'
+  persistentVolume:
+    enabled: true
+    storageClass: 'default'
+    size: 5Gi
+    accessMode: ReadWriteOnce
+  resources:
+    limits:
+      cpu: 150m
+      memory: 1Gi
+    requests:
+      cpu: 150m
+      memory: 1Gi
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    hosts:
+      - host: 'pgadmin.testing.coe.com'
+        paths:
+          - /
+  livenessProbe:
+    httpGet:
+      path: /misc/ping
+      port: 80
+    initialDelaySeconds: 120
+    periodSeconds: 60
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /misc/ping
+      port: 80
+    initialDelaySeconds: 120
+    periodSeconds: 60
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+###############################################################
+#################### Nginx Ingress ############################
+###############################################################
+nginx-ingress-controller:
+  enabled: true
+  commonAnnotations:
+    scrape-metric: 'true'
+  service:
+    externalIPs:
+      - 192.168.10.69
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        scrape-metric: 'true'
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        scrape-metric: 'true'
+  serviceAccount:
+    create: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 150m
+      memory: 256Mi
+  defaultBackend:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+##############################################################
+################### Redis ####################################
+##############################################################
+redis:
+  enabled: true
+  global:
+    storageClass: 'default'
+  usePassword: false
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      selector:
+        scrape-metric: 'true'
+    service:
+      annotations:
+        scrape-metric: 'true'
+    resources:
+      limits:
+        cpu: 150m
+        memory: 256Mi
+      requests:
+        cpu: 150m
+        memory: 256Mi
+  master:
+    #disableCommands: ["FLUSHDB", "FLUSHALL"]
+    disableCommands: []
+    persistence:
+      storageClass: 'default'
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: false
+    resources:
+      limits:
+        cpu: 150m
+        memory: 256Mi
+      requests:
+        cpu: 150m
+        memory: 256Mi
+  slave:
+    persistence:
+      storageClass: 'default'
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 300m
+        memory: 512Mi
+###############################################################
+#################### Prometheus Stack ###############################
+###############################################################
+kube-prometheus-stack:
+  enabled: true
+  commonLabels:
+    scrape-metric: 'true'
+  alertmanager:
+    enabled: true
+    apiVersion: v2
+    alertmanagerSpec:
+      ## Storage is the definition of how storage will be used by the Alertmanager instances.
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/storage.md
+      ##
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: 'default'
+            accessModes: ['ReadWriteOnce']
+            resources:
+              requests:
+                storage: 5Gi
+      resources:
+        limits:
+          cpu: 80m
+          memory: 200Mi
+        requests:
+          cpu: 80m
+          memory: 200Mi
+  grafana:
+    enabled: true
+    defaultDashboardsEnabled: true
+    adminPassword: 'P@ssword!'
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+    resources:
+      limits:
+        cpu: 300m
+        memory: 800Mi
+      requests:
+        cpu: 300m
+        memory: 512Mi
+    persistence:
+      enabled: true
+      storageClassName: 'default'
+      size: 5Gi
+      accessModes:
+        - ReadWriteOnce
+    plugins:
+      # - digrich-bubblechart-panel
+      - grafana-kubernetes-app
+      - sbueringer-consul-datasource
+      - redis-datasource
+      - grafana-azure-data-explorer-datasource
+      - grafana-azure-monitor-datasource
+      - grafana-clock-panel
+      - grafana-piechart-panel
+      - satellogic-3d-globe-panel
+      - ryantxu-ajax-panel
+      - digiapulssi-breadcrumb-panel
+      - jdbranham-diagram-panel
+      - agenty-flowcharting-panel
+      - savantly-heatmap-panel
+      - mtanda-histogram-panel
+      - natel-plotly-panel
+      - snuids-radar-panel
+      - flant-statusmap-panel
+    initChownData:
+      enabled: false
+    configmapReload:
+      extraConfigmapMounts:
+        - name: config
+          mountPath: /etc/prometheus/
+          configMap: infra-prometheus
+    grafana.ini:
+      server:
+        domain: testing.coe.com
+        root_url: '%(protocol)s://%(domain)s/'
+        serve_from_sub_path: true
+        enable_gzip: true
+      database:
+        type: 'postgres'
+        host: 'coe-postgresql:5432'
+        name: postgres
+        user: postgres
+        password: 'P@ssword!'
+        log_queries: true
+        ssl_mode: disable
+      log.console:
+        level: debug
+      plugins:
+        app_tls_skip_verify_insecure: true
+        allow_loading_unsigned_plugins: redis-datasource
+        enable_alpha: true
+      log:
+        mode: console
+      grafana_net:
+        url: https://grafana.net
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: nginx
+      hosts:
+        - grafana.testing.coe.com
+      path: /
+    livenessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 900
+      timeoutSeconds: 30
+      failureThreshold: 10
+    readinessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 900
+      timeoutSeconds: 30
+      failureThreshold: 10
+  kubeStateMetrics:
+    enabled: true
+    serviceMonitor:
+      scrapeTimeout: '30s'
+    resources:
+      limits:
+        cpu: 50m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+  nodeExporter:
+    enabled: true
+    serviceMonitor:
+      scrapeTimeout: '30s'
+    resources:
+      limits:
+        cpu: 50m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+  prometheusOperator:
+    enabled: true
+    manageCrds: true
+  serviceMonitor:
+    scrapeTimeout: '30s'
+    tlsProxy:
+      enabled: true
+      resources:
+        limits:
+          cpu: 50m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 128Mi
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  ## Deploy a Prometheus instance
+  ##
+  #   podname=$(kubectl get pods -o=jsonpath='{.items[0].metadata.name}' -l k8s-app=kube-apiserver -n kube-system)
+  #
+  # kubectl create secret generic etcd-certs -nmonitoring \
+  #   --from-literal=ca.crt="$(kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/kube-apiserver/etcd-ca.crt)" \
+  #   --from-literal=client.crt="$(kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/kube-apiserver/etcd-client.crt)" \
+  # --from-literal=client.key="$(kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/kube-apiserver/etcd-client.key)"
+  kubeEtcd:
+    enabled: true
+    serviceMonitor:
+      scrapeTimeout: '30s'
+  kubeScheduler:
+    enabled: true
+    serviceMonitor:
+      scrapeTimeout: '30s'
+  coreDns:
+    enabled: true
+    serviceMonitor:
+      scrapeTimeout: '30s'
+  kubeDns:
+    enabled: false
+    serviceMonitor:
+      scrapeTimeout: '30s'
+  kubelet:
+    enabled: true
+    serviceMonitor:
+      scrapeTimeout: '30s'
+  prometheus:
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: nginx
+      hosts:
+        - prometheus.testing.coe.com
+      paths:
+        - /
+    enabled: true
+    serviceAccount:
+      create: true
+    prometheusSpec:
+      ruleSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      retention: 181d
+      routePrefix: /
+      retentionSize: '512MB'
+      resources:
+        limits:
+          cpu: 750m
+          memory: 4Gi
+        requests:
+          cpu: 500m
+          memory: 2Gi
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: 'default'
+            accessModes: ['ReadWriteOnce']
+            resources:
+              requests:
+                storage: 50Gi
+###############################################################
+#################### Loki #####################################
+###############################################################
+loki-stack:
+  enabled: true
+  loki:
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: nginx
+      hosts:
+        - host: loki.testing.coe.com
+          paths:
+            - /
+    config:
+      frontend:
+        log_queries_longer_than: '30s'
+      query_range:
+        split_queries_by_interval: 0s
+      auth_enabled: false
+      chunk_store_config:
+        write_dedupe_cache_config:
+          enable_fifocache: false
+          redis:
+            endpoint: redis:6379
+            expiration: '3600s'
+            db: 3
+            idle_timeout: '5s'
+            pool_size: 8
+        chunk_cache_config:
+          enable_fifocache: false
+          redis:
+            endpoint: redis:6379
+            expiration: '3600s'
+            db: 2
+            idle_timeout: '5s'
+            pool_size: 8
+        max_look_back_period: 4032h
+      compactor:
+        shared_store: filesystem
+        working_directory: /data/loki/boltdb-shipper-compactor
+      ingester:
+        lifecycler:
+          ring:
+            kvstore:
+              store: inmemory
+            replication_factor: 1
+        max_transfer_retries: 0
+        chunk_block_size: 262144
+        chunk_idle_period: 3m
+        chunk_retain_period: 1m
+      limits_config:
+        max_label_name_length: 1024
+        max_label_value_length: 4096
+        max_label_names_per_series: 90
+        reject_old_samples: true
+        reject_old_samples_max_age: 4032h
+        enforce_metric_name: false
+        max_entries_limit_per_query: 10000
+        max_chunks_per_query: 6000000
+        max_query_length: 0
+        max_query_parallelism: 8
+        cardinality_limit: 500000
+      schema_config:
+        configs:
+          - from: '2020-10-24'
+            store: boltdb
+            object_store: filesystem
+            schema: v11
+            index:
+              period: 168h
+              prefix: index_
+            chunks:
+              period: 168h
+              prefix: index_
+            row_shards: 32
+      server:
+        http_listen_port: 3100
+        http_server_read_timeout: '60s'
+        http_server_write_timeout: '60s'
+        log_level: 'error'
+      storage_config:
+        max_chunk_batch_size: 100
+        boltdb:
+          directory: /data/loki/boltdb
+        filesystem:
+          directory: /data/loki/chunks
+        index_queries_cache_config:
+          redis:
+            endpoint: redis:6379
+            expiration: '3600s'
+            db: 2
+            idle_timeout: '5s'
+      table_manager:
+        retention_deletes_enabled: true
+        retention_period: 4032h
+    enabled: true
+    persistence:
+      enabled: true
+      accessModes:
+        - ReadWriteOnce
+      size: 20Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 3Gi
+      requests:
+        cpu: 250m
+        memory: 2Gi
+  promtail:
+    enabled: true
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi

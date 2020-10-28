@@ -1,0 +1,30 @@
+image:
+  debug: true
+global:
+  postgresql:
+    postgresqlPassword: 'P@ssword!'
+  storageClass: 'default'
+postgresqlDatabase: saleor
+postgresqlPostgresPassword: 'P@ssword!'
+postgresqlUsername: 'postgres'
+postgresqlPassword: 'P@ssword!'
+persistence:
+  enabled: true
+  storageClass: 'default'
+  size: 25Gi
+resources:
+  limits:
+    cpu: 500m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      scrape-metric: 'true'
+livenessProbe:
+  enabled: false
+readinessProbe:
+  enabled: false

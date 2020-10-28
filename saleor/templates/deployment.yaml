@@ -6,7 +6,7 @@ metadata:
     app: '{{.Release.Name}}-saleor'
     service: '{{.Release.Name}}-saleor-api'
 spec:
-  replicas: 3
+  replicas: 4
   serviceName: '{{.Release.Name}}-saleor-api'
   selector:
     matchLabels:
@@ -22,12 +22,14 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: hnminh/saleor-api:kms
+        - image: hnminh/saleor-api:kms-test
           name: saleor-api
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
               name: api
+            - containerPort: 9191
+              name: metrics
           env:
             - name: ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL
               value: '{{ .Values.saleor.confirmationByEmail }}'
@@ -37,13 +39,8 @@ spec:
               value: '{{ .Values.saleor.debugToolBar }}'
             - name: DEBUG
               value: '{{ .Values.saleor.debug }}'
-            {{ if .Values.postgresql.enabled }}
-            - name: DATABASE_URL
-              value: postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{.Release.Name}}-postgresql-headless.default:5432/postgres'
-            {{ else }}
             - name: DATABASE_URL
               value: '{{ .Values.saleor.databaseUrl }}'
-            {{ end }}
             {{ if .Values.redis.enabled }}
             - name: CACHE_URL
               value: 'redis://{{.Release.Name}}-redis-headless.default:6379/0'
@@ -65,11 +62,11 @@ spec:
               value: 'http://{{ .Values.saleor.storefrontIngress }}'
           resources:
             limits:
-              cpu: '300m'
-              memory: '2Gi'
+              cpu: '500m'
+              memory: '1Gi'
             requests:
-              cpu: '300m'
-              memory: '2Gi'
+              cpu: '500m'
+              memory: '1Gi'
           volumeMounts:
             - mountPath: /app/media
               name: media-storage
@@ -92,7 +89,7 @@ metadata:
     app: '{{.Release.Name}}-saleor'
     service: '{{.Release.Name}}-saleor-dashboard'
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: '{{.Release.Name}}-saleor'
@@ -100,7 +97,7 @@ spec:
   strategy:
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 1
+      maxUnavailable: 0
     type: RollingUpdate
   template:
     metadata:
@@ -140,7 +137,7 @@ metadata:
     app: '{{.Release.Name}}-saleor'
     service: '{{.Release.Name}}-saleor-storefront'
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: '{{.Release.Name}}-saleor'
@@ -148,7 +145,7 @@ spec:
   strategy:
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 1
+      maxUnavailable: 0
     type: RollingUpdate
   template:
     metadata:

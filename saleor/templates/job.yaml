@@ -20,27 +20,15 @@ spec:
             [
               '/bin/sh',
               '-c',
-              'apt-get update -y && apt-get install postgresql-client -y && python3 manage.py migrate && python3 manage.py populatedb && python3 manage.py populatedb && python3 manage.py populatedb &&  python3 manage.py populatedb && python manage.py create_thumbnails && python3 manage.py createsuperuser --no-input --email=admin@kms-technology.com || true && python3 manage.py createsuperuser --no-input --email=minhhoang@kms-technology.com || true && echo "UPDATE public.warehouse_stock SET quantity = 2147483647" | python3 manage.py dbshell && echo yes | python3 manage.py collectstatic && cp -avr /app/media/* /app/media-temp && cp -avr /app/static/* /app/static-temp',
+              'apt-get update -y && apt-get install postgresql-client -y && python3 manage.py migrate && python3 manage.py populatedb && python manage.py create_thumbnails && python3 manage.py createsuperuser --no-input --email=admin@kms-technology.com || true && python3 manage.py createsuperuser --no-input --email=minhhoang@kms-technology.com || true && echo "UPDATE public.warehouse_stock SET quantity = 2147483647" | python3 manage.py dbshell && echo yes | python3 manage.py collectstatic && cp -avr /app/media/* /app/media-temp && cp -avr /app/static/* /app/static-temp',
             ]
           env:
             - name: ENABLE_DEBUG_TOOLBAR
               value: 'True'
             - name: DEBUG
               value: 'True'
-            {{ if .Values.postgresql.enabled }}
-            - name: DATABASE_URL
-              value: postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{.Release.Name}}-postgresql-headless.default:5432/postgres'
-            {{ else }}
             - name: DATABASE_URL
               value: '{{ .Values.saleor.databaseUrl }}'
-            {{ end }}
-            {{ if .Values.redis.enabled }}
-            - name: CACHE_URL
-              value: 'redis://{{.Release.Name}}-redis-headless.default:6379/0'
-            {{ else }}
-            - name: CACHE_URL
-              value: '{{ .Values.saleor.redisUrl }}'
-            {{ end }}
             - name: ALLOWED_CLIENT_HOSTS
               value: '{{ .Values.saleor.allowHosts }}, {{.Release.Name}}-saleor-dashboard, {{.Release.Name}}-saleor-storefront'
             - name: ALLOWED_HOSTS

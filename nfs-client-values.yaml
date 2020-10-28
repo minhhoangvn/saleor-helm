@@ -1,0 +1,23 @@
+nfs:
+  server: 192.168.10.1
+  path: /mnt/sharedfolder
+storageClass:
+  create: true
+  provisionerName: nfs-provision
+  defaultClass: true
+  name: default
+  allowVolumeExpansion: true
+  reclaimPolicy: Delete
+  archiveOnDelete: true
+  accessModes: ReadWriteOnce
+rbac:
+  create: true
+serviceAccount:
+  create: true
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
