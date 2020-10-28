@@ -56,9 +56,6 @@ helm install postgresql -f postgresql-values.yaml bitnami/postgresql --version 9
 
 ![postgresql](/images/8.png)
 
-**Note**
-Copy the value
-
 ### 5. Install Saleor chart
 
 ```
