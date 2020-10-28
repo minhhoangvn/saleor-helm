@@ -29,6 +29,13 @@ spec:
               value: 'True'
             - name: DATABASE_URL
               value: '{{ .Values.saleor.databaseUrl }}'
+            {{ if .Values.redis.enabled }}
+            - name: CACHE_URL
+              value: 'redis://{{.Release.Name}}-redis-master.{{.Release.Namespace}}:6379/0'
+            {{ else }}
+            - name: CACHE_URL
+              value: '{{ .Values.saleor.redisUrl }}'
+            {{ end }}
             - name: ALLOWED_CLIENT_HOSTS
               value: '{{ .Values.saleor.allowHosts }}, {{.Release.Name}}-saleor-dashboard, {{.Release.Name}}-saleor-storefront'
             - name: ALLOWED_HOSTS
